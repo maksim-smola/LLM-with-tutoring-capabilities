@@ -74,9 +74,16 @@ def ask():
         },
         json={
             "model": "llama3.1-8b",
+            "temperature": 0.4,
             "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_question}
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT
+                },
+                {
+                    "role": "user",
+                    "content": user_question
+                }
             ]
         }
     )
@@ -90,14 +97,5 @@ def ask():
 
     return jsonify({"answer": answer})
 
-    answer = data["choices"][0]["message"]["content"]
-
-    return jsonify({"answer": answer})
-
-
 if __name__ == "__main__":
     app.run(debug=True)
-
-json={
-    "model": "llama3.1-8b",
-    "temperature": 0.4,
