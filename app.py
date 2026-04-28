@@ -97,3 +97,7 @@ def ask():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+json={
+    "model": "llama3.1-8b",
+    "temperature": 0.4,
