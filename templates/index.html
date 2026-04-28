@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Учебный помощник</title>
+</head>
+
+<body>
+
+<h2>Учебный AI-ассистент</h2>
+
+<input id="question" type="text" placeholder="Введите вопрос">
+<button onclick="ask()">Отправить</button>
+
+<p id="answer"></p>
+
+<script>
+
+async function ask() {
+
+let question = document.getElementById("question").value
+
+let response = await fetch("/ask", {
+
+method: "POST",
+
+headers: {
+
+"Content-Type": "application/json"
+
+},
+
+body: JSON.stringify({
+
+question: question
+
+})
+
+})
+
+let data = await response.json()
+
+document.getElementById("answer").innerText = data.answer
+
+}
+
+</script>
+
+</body>
+
+</html>
