@@ -25,27 +25,34 @@ def ask():
 
     user_question = request.json.get("question")
 
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
     response = requests.post(
-        "https://api.openai.com/v1/chat/completions",
+        f"{url}?key={GOOGLE_API_KEY}",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
             "Content-Type": "application/json"
         },
         json={
-            "model": "gpt-4o-mini",
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_question}
+            "contents": [
+                {
+                    "parts": [
+                        {"text": SYSTEM_PROMPT + "\n\nВопрос пользователя:\n" + user_question}
+                    ]
+                }
             ]
         }
     )
 
     data = response.json()
 
-    if "choices" not in data:
-        return jsonify({"answer": f"Ошибка OpenAI: {data}"})
+    if "candidates" not in data:
+        return jsonify({"answer": f"Ошибка Google API: {data}"})
+
+    answer = data["candidates"][0]["content"]["parts"][0]["text"]
+
+    return jsonify({"answer": answer})
 
     answer = data["choices"][0]["message"]["content"]
 
