@@ -25,32 +25,29 @@ def ask():
 
     user_question = request.json.get("question")
 
-    GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
 
     response = requests.post(
-        f"{url}?key={GOOGLE_API_KEY}",
+        "https://api.cerebras.ai/v1/chat/completions",
         headers={
+            "Authorization": f"Bearer {CEREBRAS_API_KEY}",
             "Content-Type": "application/json"
         },
         json={
-            "contents": [
-                {
-                    "parts": [
-                        {"text": SYSTEM_PROMPT + "\n\nВопрос пользователя:\n" + user_question}
-                    ]
-                }
+            "model": "llama3.1-8b",
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": user_question}
             ]
         }
     )
 
     data = response.json()
 
-    if "candidates" not in data:
-        return jsonify({"answer": f"Ошибка Google API: {data}"})
+    if "choices" not in data:
+        return jsonify({"answer": f"Ошибка Cerebras API: {data}"})
 
-    answer = data["candidates"][0]["content"]["parts"][0]["text"]
+    answer = data["choices"][0]["message"]["content"]
 
     return jsonify({"answer": answer})
 
