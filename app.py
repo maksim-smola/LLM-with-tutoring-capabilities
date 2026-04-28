@@ -55,6 +55,25 @@ SYSTEM_PROMPT = """
 
 @app.route("/")
 def home():
+    return render_template("home.html")
+
+
+@app.route("/assistant")
+def assistant():
+    return render_template("index.html")
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.route("/architecture")
+def architecture():
+    return render_template("architecture.html")
+    
+@app.route("/")
+def home():
     return render_template("index.html")
 
 @app.route("/ask", methods=["POST"])
