@@ -1,17 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
+
 <head>
-    <title>AI Учебный помощник</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Учебный AI-ассистент</title>
+
+<style>
+
+body {
+font-family: Arial, sans-serif;
+background: #f5f7fa;
+margin: 0;
+display: flex;
+flex-direction: column;
+align-items: center;
+}
+
+header {
+width: 100%;
+background: #1e3a8a;
+color: white;
+padding: 20px;
+text-align: center;
+font-size: 22px;
+font-weight: bold;
+}
+
+.chat-container {
+width: 90%;
+max-width: 800px;
+background: white;
+margin-top: 20px;
+padding: 20px;
+border-radius: 10px;
+box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+}
+
+.message {
+margin: 10px 0;
+padding: 10px;
+border-radius: 8px;
+}
+
+.user {
+background: #e0f2fe;
+text-align: right;
+}
+
+.bot {
+background: #f1f5f9;
+text-align: left;
+}
+
+input {
+width: 75%;
+padding: 10px;
+border-radius: 6px;
+border: 1px solid #ccc;
+font-size: 16px;
+}
+
+button {
+padding: 10px 18px;
+border: none;
+background: #1e3a8a;
+color: white;
+border-radius: 6px;
+font-size: 16px;
+cursor: pointer;
+}
+
+button:hover {
+background: #162d6b;
+}
+
+.loading {
+color: gray;
+font-style: italic;
+margin-top: 10px;
+}
+
+footer {
+margin-top: 20px;
+font-size: 13px;
+color: gray;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h2>Учебный AI-ассистент</h2>
+<header>
+Учебный интеллектуальный ассистент
+</header>
 
-<input id="question" type="text" placeholder="Введите вопрос">
+<div class="chat-container" id="chat">
+
+<div class="message bot">
+Здравствуйте. Я помогу разобраться в учебном материале. Задайте вопрос.
+</div>
+
+</div>
+
+<div style="margin-top: 10px">
+
+<input id="question" placeholder="Введите учебный вопрос..." />
+
 <button onclick="ask()">Отправить</button>
 
-<p id="answer"></p>
+</div>
+
+<div id="loading" class="loading"></div>
+
+<footer>
+Разработано в рамках исследовательского проекта по образовательным нейросетям
+</footer>
 
 <script>
 
@@ -19,27 +127,45 @@ async function ask() {
 
 let question = document.getElementById("question").value
 
+if (!question) return
+
+let chat = document.getElementById("chat")
+
+chat.innerHTML += `
+<div class="message user">
+${question}
+</div>
+`
+
+document.getElementById("question").value = ""
+
+document.getElementById("loading").innerText = "Ассистент думает..."
+
 let response = await fetch("/ask", {
 
 method: "POST",
 
 headers: {
-
 "Content-Type": "application/json"
-
 },
 
 body: JSON.stringify({
-
 question: question
-
 })
 
 })
 
 let data = await response.json()
 
-document.getElementById("answer").innerText = data.answer
+document.getElementById("loading").innerText = ""
+
+chat.innerHTML += `
+<div class="message bot">
+${data.answer}
+</div>
+`
+
+chat.scrollTop = chat.scrollHeight
 
 }
 
