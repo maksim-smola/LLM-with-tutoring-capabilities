@@ -20,18 +20,21 @@ def home():
 @app.route("/ask", methods=["POST"])
 def ask():
 
+    import os
+    import requests
+
     user_question = request.json.get("question")
 
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
     response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
+        "https://api.openai.com/v1/chat/completions",
         headers={
-            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://llm-with-tutoring-capabilities.onrender.com",
-            "X-Title": "School AI Project"
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json"
         },
         json={
-            "model": "google/gemma-4-31b-it",
+            "model": "gpt-4o-mini",
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_question}
@@ -42,7 +45,7 @@ def ask():
     data = response.json()
 
     if "choices" not in data:
-        return jsonify({"answer": f"Ошибка модели: {data}"})
+        return jsonify({"answer": f"Ошибка OpenAI: {data}"})
 
     answer = data["choices"][0]["message"]["content"]
 
