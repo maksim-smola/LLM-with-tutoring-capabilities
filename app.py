@@ -26,7 +26,9 @@ def ask():
         "https://openrouter.ai/api/v1/chat/completions",
         headers={
             "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://llm-with-tutoring-capabilities.onrender.com",
+            "X-Title": "School AI Project"
         },
         json={
             "model": "google/gemma-4-31b-it",
@@ -37,7 +39,12 @@ def ask():
         }
     )
 
-    answer = response.json()["choices"][0]["message"]["content"]
+    data = response.json()
+
+    if "choices" not in data:
+        return jsonify({"answer": f"Ошибка модели: {data}"})
+
+    answer = data["choices"][0]["message"]["content"]
 
     return jsonify({"answer": answer})
 
