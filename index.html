@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Учебный AI-ассистент</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [["$", "$"], ["\\(", "\\)"]] },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --ink: #122033;
+      --muted: #64748b;
+      --panel: rgba(255, 255, 255, 0.82);
+      --line: rgba(30, 64, 175, 0.16);
+      --blue: #2563eb;
+      --green: #14b8a6;
+      --coral: #f97316;
+      --violet: #7c3aed;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: Inter, "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 8% 8%, rgba(20, 184, 166, 0.18), transparent 28%),
+        radial-gradient(circle at 86% 12%, rgba(249, 115, 22, 0.16), transparent 24%),
+        linear-gradient(135deg, #f8fbff 0%, #eff6ff 42%, #f8fafc 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37, 99, 235, 0.06) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(to bottom, black, transparent 82%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px clamp(18px, 5vw, 70px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+      background: rgba(248, 250, 252, 0.78);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 10px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--green));
+      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .nav-links a {
+      padding: 10px 12px;
+      border-radius: 8px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--blue);
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .section {
+      padding: clamp(48px, 7vw, 88px) clamp(18px, 5vw, 70px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 520px);
+      align-items: center;
+      gap: clamp(32px, 6vw, 80px);
+      min-height: calc(100vh - 66px);
+      padding-top: 36px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin: 0 0 18px;
+      padding: 8px 12px;
+      color: #0f766e;
+      border: 1px solid rgba(20, 184, 166, 0.26);
+      border-radius: 8px;
+      background: rgba(240, 253, 250, 0.84);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      font-size: clamp(42px, 7vw, 78px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .lead {
+      max-width: 690px;
+      margin: 22px 0 0;
+      color: #475569;
+      font-size: clamp(17px, 2vw, 21px);
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 18px 36px rgba(37, 99, 235, 0.23);
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 42px rgba(37, 99, 235, 0.3);
+    }
+
+    .button.secondary {
+      color: #1e293b;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(37, 99, 235, 0.18);
+      box-shadow: none;
+    }
+
+    .visual-panel {
+      position: relative;
+      min-height: 470px;
+      padding: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 8px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(239, 246, 255, 0.72));
+      box-shadow: var(--shadow);
+      animation: floatIn 0.8s ease both;
+    }
+
+    .learning-map {
+      display: grid;
+      gap: 14px;
+      height: 100%;
+    }
+
+    .map-row {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 16px;
+      border: 1px solid rgba(37, 99, 235, 0.13);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      animation: rise 0.7s ease both;
+    }
+
+    .map-row:nth-child(2) { animation-delay: 0.08s; }
+    .map-row:nth-child(3) { animation-delay: 0.16s; }
+    .map-row:nth-child(4) { animation-delay: 0.24s; }
+
+    .map-icon {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      place-items: center;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      font-weight: 900;
+    }
+
+    .map-row:nth-child(2) .map-icon { background: linear-gradient(135deg, var(--coral), #facc15); }
+    .map-row:nth-child(3) .map-icon { background: linear-gradient(135deg, var(--violet), var(--blue)); }
+    .map-row:nth-child(4) .map-icon { background: linear-gradient(135deg, #0f766e, var(--green)); }
+
+    .map-row p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .stat {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .stat strong {
+      display: block;
+      color: var(--blue);
+      font-size: 26px;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .intro-grid,
+    .feature-grid,
+    .architecture-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 28px;
+    }
+
+    .card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 16px 42px rgba(15, 23, 42, 0.07);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(37, 99, 235, 0.35);
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .assistant-shell {
+      display: grid;
+      grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 28px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: var(--shadow);
+    }
+
+    .tips {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .tip {
+      padding: 16px;
+      border-left: 4px solid var(--green);
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #475569;
+      line-height: 1.55;
+      cursor: pointer;
+    }
+
+    .chat-panel {
+      display: grid;
+      grid-template-rows: minmax(380px, 52vh) auto auto;
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .chat-container {
+      padding: 20px;
+      overflow-y: auto;
+      background:
+        linear-gradient(rgba(37, 99, 235, 0.04), rgba(20, 184, 166, 0.03)),
+        #ffffff;
+    }
+
+    .message {
+      width: fit-content;
+      max-width: min(760px, 86%);
+      margin: 0 0 14px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      line-height: 1.62;
+      animation: fadeUp 0.28s ease both;
+      overflow-wrap: anywhere;
+    }
+
+    .message.user {
+      margin-left: auto;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+    }
+
+    .message.bot {
+      color: #1e293b;
+      background: #f8fafc;
+      border-left: 4px solid var(--green);
+    }
+
+    .message p:first-child {
+      margin-top: 0;
+    }
+
+    .message p:last-child {
+      margin-bottom: 0;
+    }
+
+    .input-panel {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+
+    input {
+      min-width: 0;
+      min-height: 48px;
+      padding: 0 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      color: var(--ink);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .loading {
+      min-height: 28px;
+      padding: 0 18px 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    footer {
+      padding: 30px clamp(18px, 5vw, 70px);
+      color: #475569;
+      border-top: 1px solid rgba(37, 99, 235, 0.1);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateY(22px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 960px) {
+      .hero,
+      .assistant-shell {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: auto;
+      }
+
+      .visual-panel {
+        min-height: 360px;
+      }
+
+      .intro-grid,
+      .feature-grid,
+      .architecture-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav-links {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .input-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a class="brand" href="#home" aria-label="На главную">
+      <span class="brand-mark">AI</span>
+      <span>Учебный ассистент</span>
+    </a>
+    <div class="nav-links" aria-label="Навигация">
+      <a href="#home">Главная</a>
+      <a href="#about">О проекте</a>
+      <a href="#features">Возможности</a>
+      <a href="#assistant">Ассистент</a>
+      <a href="#architecture">Архитектура</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="section hero" id="home">
+      <div>
+        <p class="eyebrow">Исследовательский проект об образовательных нейросетях</p>
+        <h1>Учебный AI-ассистент, который объясняет, а не просто отвечает</h1>
+        <p class="lead">
+          Сайт демонстрирует тьютора на базе большой языковой модели: он помогает разобраться
+          в учебном вопросе, показывает ход рассуждения и ведет ученика к пониманию через шаги.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="#assistant">Задать вопрос</a>
+          <a class="button secondary" href="#about">Посмотреть проект</a>
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <strong>3</strong>
+            <span>этапа ответа</span>
+          </div>
+          <div class="stat">
+            <strong>24/7</strong>
+            <span>доступность</span>
+          </div>
+          <div class="stat">
+            <strong>LaTeX</strong>
+            <span>для формул</span>
+          </div>
+        </div>
+      </div>
+      <div class="visual-panel" aria-label="Схема работы ассистента">
+        <div class="learning-map">
+          <div class="map-row">
+            <div class="map-icon">1</div>
+            <div>
+              <h3>Вопрос ученика</h3>
+              <p>Пользователь формулирует задачу, тему или непонятный фрагмент материала.</p>
+            </div>
+          </div>
+          <div class="map-row">
+            <div class="map-icon">2</div>
+            <div>
+              <h3>Анализ</h3>
+              <p>Модель определяет учебный контекст и выбирает понятное объяснение.</p>
+            </div>
+          </div>
+          <div class="map-row">
+            <div class="map-icon">3</div>
+            <div>
+              <h3>Пошаговое решение</h3>
+              <p>Ответ разбивается на логические части, чтобы ученик видел ход мысли.</p>
+            </div>
+          </div>
+          <div class="map-row">
+            <div class="map-icon">4</div>
+            <div>
+              <h3>Наводящий вопрос</h3>
+              <p>Ассистент помогает продолжить рассуждение самостоятельно.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <p class="eyebrow">О проекте</p>
+      <h2>Цель проекта — показать, как ИИ может поддерживать обучение</h2>
+      <div class="intro-grid">
+        <article class="card">
+          <h3>Педагогический подход</h3>
+          <p>Ассистент не ограничивается короткой подсказкой: он объясняет ход решения и задает вопрос, который помогает ученику подумать самому.</p>
+        </article>
+        <article class="card">
+          <h3>Четкая структура</h3>
+          <p>Ответы строятся по единому формату: объяснение, шаг решения и вопрос для продолжения работы.</p>
+        </article>
+        <article class="card">
+          <h3>Учебная направленность</h3>
+          <p>Проект подходит для демонстрации возможностей языковых моделей в школьном и студенческом обучении.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <p class="eyebrow">Возможности</p>
+      <h2>Функции, которые делают сайт полезнее</h2>
+      <div class="feature-grid">
+        <article class="card">
+          <h3>Диалоговый интерфейс</h3>
+          <p>Пользователь вводит вопрос и получает оформленный ответ с поддержкой Markdown.</p>
+        </article>
+        <article class="card">
+          <h3>Формулы</h3>
+          <p>MathJax отображает математические выражения в удобном виде, включая LaTeX.</p>
+        </article>
+        <article class="card">
+          <h3>Подсказки</h3>
+          <p>Готовые примеры вопросов помогают быстро проверить работу ассистента.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="assistant">
+      <p class="eyebrow">Ассистент</p>
+      <h2>Попробуйте задать учебный вопрос</h2>
+      <div class="assistant-shell">
+        <aside class="tips" aria-label="Примеры вопросов">
+          <div class="tip" data-question="Объясни, как решать квадратные уравнения через дискриминант.">Квадратные уравнения</div>
+          <div class="tip" data-question="Помоги понять закон сохранения энергии на простом примере.">Физика: энергия</div>
+          <div class="tip" data-question="Объясни разницу между метафорой и сравнением.">Русский язык</div>
+          <div class="tip" data-question="Составь план ответа по теме влияния нейросетей на образование.">План ответа</div>
+        </aside>
+        <div class="chat-panel">
+          <div class="chat-container" id="chat">
+            <div class="message bot">
+              Здравствуйте! Напишите учебный вопрос, и я помогу разобрать его шаг за шагом.
+            </div>
+          </div>
+          <div class="input-panel">
+            <input id="question" placeholder="Введите учебный вопрос..." autocomplete="off">
+            <button class="button" id="sendButton" type="button">Отправить</button>
+          </div>
+          <div id="loading" class="loading" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <p class="eyebrow">Архитектура</p>
+      <h2>Как устроен сайт</h2>
+      <div class="architecture-grid">
+        <article class="card">
+          <h3>Frontend</h3>
+          <p>HTML, CSS и JavaScript формируют интерфейс, а также отправляют вопрос на сервер без перезагрузки страницы.</p>
+        </article>
+        <article class="card">
+          <h3>Backend</h3>
+          <p>Flask принимает запрос `/ask`, проверяет данные и обращается к API языковой модели.</p>
+        </article>
+        <article class="card">
+          <h3>Model API</h3>
+          <p>Cerebras API генерирует ответ с учетом системной инструкции образовательного тьютора.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    Разработано в рамках исследовательского проекта по образовательным нейросетям.
+  </footer>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("question");
+    const loading = document.getElementById("loading");
+    const sendButton = document.getElementById("sendButton");
+
+    function addMessage(content, type) {
+      const message = document.createElement("div");
+      message.className = `message ${type}`;
+      message.innerHTML = type === "bot" ? marked.parse(content.trim()) : content;
+      chat.appendChild(message);
+      chat.scrollTop = chat.scrollHeight;
+      if (window.MathJax) {
+        MathJax.typesetPromise([message]);
+      }
+    }
+
+    async function ask() {
+      const question = input.value.trim();
+      if (!question) return;
+
+      addMessage(question, "user");
+      input.value = "";
+      input.focus();
+      loading.textContent = "Ассистент анализирует задачу...";
+      sendButton.disabled = true;
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+        const data = await response.json();
+        addMessage(data.answer || "Ответ не получен.", "bot");
+      } catch (error) {
+        addMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.", "bot");
+      } finally {
+        loading.textContent = "";
+        sendButton.disabled = false;
+      }
+    }
+
+    sendButton.addEventListener("click", ask);
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        ask();
+      }
+    });
+
+    document.querySelectorAll(".tip").forEach((tip) => {
+      tip.addEventListener("click", () => {
+        input.value = tip.dataset.question;
+        input.focus();
+      });
+    });
+  </script>
+</body>
+</html>
