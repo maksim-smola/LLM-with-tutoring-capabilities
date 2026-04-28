@@ -195,9 +195,12 @@ let data = await response.json()
 
 document.getElementById("loading").innerText = ""
 
-let formatted =
-marked.parse(data.answer)
+let cleaned =
+data.answer.replace(/^\s+/gm, "")
 
+let formatted =
+marked.parse(cleaned)
+  
 chat.innerHTML += `
 <div class="message bot">
 ${formatted}
