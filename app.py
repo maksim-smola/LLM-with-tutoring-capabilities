@@ -85,8 +85,17 @@ def wiki_image_search(query):
     image = data.get("thumbnail") or data.get("originalimage") or {}
     source = image.get("source", "")
     title = data.get("title", "Wikipedia")
-    if not source:
-        return None
+
+    def wiki_image_search(query):
+        data = wiki_summary(query)
+        image = data.get("thumbnail") or data.get("originalimage") or {}
+        source = image.get("source", "")
+        title = data.get("title", "Wikipedia")
+
+        if not source:
+            return None
+
+        return {"src": source, "alt": title}
 def commons_image_search(query):
     try:
         url = "https://commons.wikimedia.org/w/api.php"
@@ -118,10 +127,6 @@ def commons_image_search(query):
         pass
 
     return None
-
-    return {"src": source, "alt": title}
-if not wiki_image:
-    wiki_image = commons_image_search(user_question)
 
 def ddg_search(query):
     try:
@@ -211,10 +216,12 @@ def ask():
     if use_internet:
         wiki_context = wiki_search(user_question).strip()
         wiki_image = wiki_image_search(user_question)
+
         if not wiki_context:
             wiki_context = ddg_search(user_question)
+
         if not wiki_image:
-        wiki_image = commons_image_search(user_question)
+            wiki_image = commons_image_search(user_question)
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
