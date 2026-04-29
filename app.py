@@ -52,7 +52,7 @@ def home():
 
 @app.route("/assistant")
 def assistant():
-    return render_template("index.html")
+    return render_template("assistant.html")
 
 
 @app.route("/about")
