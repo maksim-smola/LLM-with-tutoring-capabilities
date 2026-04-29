@@ -16,16 +16,16 @@
     @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
 
     :root {
-      --ink: #392719;
-      --muted: #8a6f61;
-      --line: #efd7c8;
-      --panel: #fffaf5;
-      --soft: #fff3e8;
-      --peach: #f7a889;
-      --apricot: #f5c27d;
-      --rose: #efa7a7;
-      --sage: #b8cfa7;
-      --caramel: #c47a4a;
+      --ink: #2f2119;
+      --muted: #7c6254;
+      --line: #ecd2c2;
+      --panel: #fff7f1;
+      --soft: #fff0e5;
+      --peach: #ff9b72;
+      --apricot: #ffb080;
+      --rose: #ef9a86;
+      --sage: #d8b99f;
+      --caramel: #d86f3d;
       --blue: var(--caramel);
       --green: var(--sage);
       --violet: var(--rose);
@@ -42,8 +42,8 @@
       color: var(--ink);
       font-family: Nunito, Inter, "Segoe UI", system-ui, sans-serif;
       background:
-        linear-gradient(115deg, rgba(255, 245, 232, 0.96), rgba(255, 235, 224, 0.86), rgba(245, 236, 210, 0.92), rgba(255, 249, 240, 0.96)),
-        repeating-linear-gradient(120deg, rgba(247, 168, 137, 0.18) 0 1px, transparent 1px 34px);
+        linear-gradient(115deg, rgba(255, 246, 239, 0.96), rgba(255, 226, 209, 0.86), rgba(255, 235, 221, 0.92), rgba(255, 249, 244, 0.96)),
+        repeating-linear-gradient(120deg, rgba(255, 155, 114, 0.16) 0 1px, transparent 1px 34px);
       background-size: 220% 220%, auto;
       animation: backgroundFlow 18s ease-in-out infinite;
     }
@@ -54,9 +54,9 @@
       inset: -18% -8%;
       z-index: -1;
       background:
-        linear-gradient(105deg, transparent 8%, rgba(247, 168, 137, 0.22) 18%, transparent 34%),
-        linear-gradient(78deg, transparent 28%, rgba(245, 194, 125, 0.24) 42%, transparent 60%),
-        linear-gradient(132deg, transparent 44%, rgba(184, 207, 167, 0.2) 58%, transparent 76%);
+        linear-gradient(105deg, transparent 8%, rgba(255, 145, 96, 0.22) 18%, transparent 34%),
+        linear-gradient(78deg, transparent 28%, rgba(255, 176, 128, 0.22) 42%, transparent 60%),
+        linear-gradient(132deg, transparent 44%, rgba(216, 111, 61, 0.14) 58%, transparent 76%);
       filter: blur(18px);
       transform: rotate(-4deg);
       animation: ribbonDrift 24s ease-in-out infinite alternate;
@@ -295,7 +295,7 @@
 
     .button:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 18px 42px rgba(196, 122, 74, 0.24);
+      box-shadow: 0 18px 42px rgba(216, 111, 61, 0.24);
     }
 
     .button:disabled {
