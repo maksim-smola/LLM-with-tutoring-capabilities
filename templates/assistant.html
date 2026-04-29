@@ -13,15 +13,18 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
+
     :root {
       --ink: #142033;
       --muted: #64748b;
       --line: #dbe4ef;
       --panel: #ffffff;
       --soft: #f6f8fb;
-      --blue: #2563eb;
-      --green: #0f766e;
-      --shadow: 0 16px 42px rgba(15, 23, 42, 0.08);
+      --blue: #3157ff;
+      --green: #0f8f83;
+      --violet: #8157ff;
+      --shadow: 0 18px 50px rgba(31, 41, 86, 0.1);
     }
 
     * {
@@ -32,8 +35,26 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      font-family: Inter, "Segoe UI", system-ui, sans-serif;
-      background: linear-gradient(180deg, #fbfdff 0%, #f3f7fb 100%);
+      font-family: Manrope, Inter, "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 12% 14%, rgba(49, 87, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 86% 8%, rgba(15, 143, 131, 0.18), transparent 24%),
+        radial-gradient(circle at 68% 88%, rgba(129, 87, 255, 0.13), transparent 26%),
+        linear-gradient(120deg, #fbfdff, #eef4ff, #f4fbf8, #f8f5ff);
+      background-size: 180% 180%;
+      animation: backgroundFlow 16s ease-in-out infinite;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(49, 87, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(49, 87, 255, 0.045) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 82%);
     }
 
     a {
@@ -71,7 +92,7 @@
       place-items: center;
       border-radius: 8px;
       color: #fff;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--blue), var(--green));
       font-size: 14px;
     }
 
@@ -106,8 +127,9 @@
     .chat-panel {
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.78);
       box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
     }
 
     .sidebar {
@@ -168,7 +190,7 @@
 
     .chat-panel {
       display: grid;
-      grid-template-rows: minmax(360px, 1fr) auto auto;
+      grid-template-rows: minmax(420px, 1fr) auto auto;
       min-width: 0;
       overflow: hidden;
     }
@@ -193,13 +215,25 @@
     .message.user {
       margin-left: auto;
       color: #fff;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--blue), var(--violet));
     }
 
     .message.bot {
       color: #1e293b;
       background: var(--soft);
       border-left: 4px solid var(--green);
+    }
+
+    .message.typing::after {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 1.05em;
+      margin-left: 3px;
+      vertical-align: -0.16em;
+      border-radius: 3px;
+      background: var(--green);
+      animation: caretBlink 0.75s steps(2, start) infinite;
     }
 
     .message p:first-child {
@@ -244,7 +278,7 @@
       border: 0;
       border-radius: 8px;
       color: #fff;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--blue), var(--violet));
       font: inherit;
       font-weight: 800;
       cursor: pointer;
@@ -260,6 +294,15 @@
       padding: 0 18px 14px;
       color: var(--muted);
       font-size: 14px;
+    }
+
+    @keyframes backgroundFlow {
+      0%, 100% { background-position: 0% 48%; }
+      50% { background-position: 100% 52%; }
+    }
+
+    @keyframes caretBlink {
+      50% { opacity: 0; }
     }
 
     @media (max-width: 900px) {
@@ -303,11 +346,13 @@
       }
 
       .chat-panel {
-        grid-template-rows: minmax(420px, 62vh) auto auto;
+        display: block;
+        overflow: visible;
       }
 
       .chat-container {
         padding: 14px;
+        overflow: visible;
       }
 
       .message {
@@ -371,6 +416,11 @@
     const input = document.getElementById("question");
     const loading = document.getElementById("loading");
     const sendButton = document.getElementById("sendButton");
+    const minimumThinkingTime = 850;
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
 
     function addMessage(content, type) {
       const message = document.createElement("div");
@@ -378,6 +428,29 @@
       message.innerHTML = type === "bot" ? marked.parse(content.trim()) : content;
       chat.appendChild(message);
       chat.scrollTop = chat.scrollHeight;
+      if (window.MathJax) {
+        MathJax.typesetPromise([message]);
+      }
+    }
+
+    async function addTypedBotMessage(content) {
+      const message = document.createElement("div");
+      message.className = "message bot typing";
+      chat.appendChild(message);
+      chat.scrollIntoView({ block: "end", behavior: "smooth" });
+
+      const text = content.trim() || "Ответ не получен.";
+      const chunkSize = text.length > 900 ? 8 : 4;
+      const delay = text.length > 900 ? 10 : 18;
+
+      for (let index = 0; index < text.length; index += chunkSize) {
+        message.textContent = text.slice(0, index + chunkSize);
+        message.scrollIntoView({ block: "end", behavior: "smooth" });
+        await wait(delay);
+      }
+
+      message.classList.remove("typing");
+      message.innerHTML = marked.parse(text);
       if (window.MathJax) {
         MathJax.typesetPromise([message]);
       }
@@ -392,6 +465,7 @@
       input.focus();
       loading.textContent = "Ассистент анализирует задачу...";
       sendButton.disabled = true;
+      const startedAt = Date.now();
 
       try {
         const response = await fetch("/ask", {
@@ -400,9 +474,14 @@
           body: JSON.stringify({ question })
         });
         const data = await response.json();
-        addMessage(data.answer || "Ответ не получен.", "bot");
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < minimumThinkingTime) {
+          await wait(minimumThinkingTime - elapsed);
+        }
+        loading.textContent = "Ассистент печатает ответ...";
+        await addTypedBotMessage(data.answer || "Ответ не получен.");
       } catch (error) {
-        addMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.", "bot");
+        await addTypedBotMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.");
       } finally {
         loading.textContent = "";
         sendButton.disabled = false;

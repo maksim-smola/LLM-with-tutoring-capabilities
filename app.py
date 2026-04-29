@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 import os
 import requests
 
@@ -53,6 +53,16 @@ def home():
 @app.route("/assistant")
 def assistant():
     return render_template("assistant.html")
+
+
+@app.route("/project")
+def project():
+    return render_template("project.html")
+
+
+@app.route("/download/project")
+def download_project():
+    return send_from_directory("static/downloads", "Приказ №27С.docx", as_attachment=True)
 
 
 @app.route("/about")

@@ -5,16 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Учебный AI-ассистент</title>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
+
     :root {
       --ink: #142033;
       --muted: #64748b;
       --line: #dbe4ef;
       --panel: #ffffff;
       --soft: #f6f8fb;
-      --blue: #2563eb;
-      --green: #0f766e;
-      --coral: #ea580c;
-      --shadow: 0 16px 42px rgba(15, 23, 42, 0.08);
+      --blue: #3157ff;
+      --green: #0f8f83;
+      --coral: #f06f38;
+      --violet: #8157ff;
+      --shadow: 0 18px 50px rgba(31, 41, 86, 0.1);
     }
 
     * {
@@ -29,8 +32,26 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      font-family: Inter, "Segoe UI", system-ui, sans-serif;
-      background: linear-gradient(180deg, #fbfdff 0%, #f3f7fb 100%);
+      font-family: Manrope, Inter, "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 12% 14%, rgba(49, 87, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 86% 8%, rgba(15, 143, 131, 0.18), transparent 24%),
+        radial-gradient(circle at 68% 88%, rgba(240, 111, 56, 0.14), transparent 26%),
+        linear-gradient(120deg, #fbfdff, #eef4ff, #f4fbf8, #fff7f1);
+      background-size: 180% 180%;
+      animation: backgroundFlow 16s ease-in-out infinite;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(49, 87, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(49, 87, 255, 0.045) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black, transparent 82%);
     }
 
     a {
@@ -68,7 +89,7 @@
       place-items: center;
       border-radius: 8px;
       color: #fff;
-      background: var(--blue);
+      background: linear-gradient(135deg, var(--blue), var(--green));
       font-size: 14px;
     }
 
@@ -172,8 +193,8 @@
       border: 1px solid transparent;
       border-radius: 8px;
       color: #fff;
-      background: var(--blue);
-      box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+      box-shadow: 0 14px 34px rgba(49, 87, 255, 0.2);
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
@@ -193,10 +214,12 @@
     .visual-panel {
       min-width: 0;
       padding: 20px;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(255, 255, 255, 0.72);
       border-radius: 8px;
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.74);
+      backdrop-filter: blur(16px);
       box-shadow: var(--shadow);
+      animation: liftIn 0.7s ease both;
     }
 
     .learning-map {
@@ -213,6 +236,15 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fbfdff;
+      animation: liftIn 0.55s ease both;
+    }
+
+    .map-row:nth-child(2) {
+      animation-delay: 0.08s;
+    }
+
+    .map-row:nth-child(3) {
+      animation-delay: 0.16s;
     }
 
     .map-icon {
@@ -276,6 +308,13 @@
     .card {
       padding: 21px;
       box-shadow: 0 10px 28px rgba(15, 23, 42, 0.04);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #bfd0ee;
+      box-shadow: 0 18px 44px rgba(31, 41, 86, 0.08);
     }
 
     .section.alt {
@@ -289,6 +328,16 @@
       border-top: 1px solid var(--line);
       background: #fff;
       line-height: 1.55;
+    }
+
+    @keyframes backgroundFlow {
+      0%, 100% { background-position: 0% 48%; }
+      50% { background-position: 100% 52%; }
+    }
+
+    @keyframes liftIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @media (max-width: 960px) {
@@ -381,7 +430,7 @@
         </p>
         <div class="hero-actions">
           <a class="button" href="/assistant">Задать вопрос</a>
-          <a class="button secondary" href="#about">Посмотреть проект</a>
+          <a class="button secondary" href="/project" target="_blank" rel="noopener">Посмотреть проект</a>
         </div>
         <div class="stats">
           <div class="stat">
