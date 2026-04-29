@@ -193,6 +193,30 @@
       background: #fff1e3;
     }
 
+    .history-actions {
+      margin-top: 14px;
+    }
+
+    .clear-history {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      color: #6f4935;
+      background: rgba(255, 248, 239, 0.72);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+    }
+
+    .clear-history:hover {
+      transform: translateY(-1px);
+      border-color: #e8b99f;
+      background: #fff1e3;
+    }
+
     .chat-panel {
       display: grid;
       grid-template-rows: minmax(420px, 1fr) auto auto;
@@ -427,7 +451,10 @@
         <button class="tip" type="button" data-question="Объясни, как решать квадратные уравнения через дискриминант.">Квадратные уравнения</button>
         <button class="tip" type="button" data-question="Помоги понять закон сохранения энергии на простом примере.">Физика: энергия</button>
         <button class="tip" type="button" data-question="Объясни разницу между метафорой и сравнением.">Русский язык</button>
-        <button class="tip" type="button" data-question="Составь план ответа по теме влияния нейросетей на образование.">План ответа</button>
+        <button class="tip" type="button" data-question="Расскажи, что ты за модель, кто тебя создал и для каких образовательных целей ты предназначен.">О модели</button>
+      </div>
+      <div class="history-actions">
+        <button class="clear-history" id="clearHistory" type="button">Очистить историю</button>
       </div>
     </aside>
 
@@ -450,24 +477,57 @@
     const input = document.getElementById("question");
     const loading = document.getElementById("loading");
     const sendButton = document.getElementById("sendButton");
+    const clearHistoryButton = document.getElementById("clearHistory");
     const minimumThinkingTime = 850;
+    const storageKey = "studyAssistantChatHistory";
+    const welcomeMessage = "Здравствуйте! Напишите учебный вопрос, и я помогу разобрать его шаг за шагом.";
+    let chatHistory = loadHistory();
 
     function wait(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
-    function addMessage(content, type) {
+    function loadHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        return Array.isArray(saved) ? saved : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem(storageKey, JSON.stringify(chatHistory.slice(-60)));
+    }
+
+    function historyForRequest() {
+      return chatHistory
+        .slice(-8)
+        .map((item) => ({
+          role: item.role,
+          content: item.content.slice(0, 900)
+        }));
+    }
+
+    function addMessage(content, type, shouldSave = false) {
       const message = document.createElement("div");
       message.className = `message ${type}`;
       message.innerHTML = type === "bot" ? marked.parse(content.trim()) : content;
       chat.appendChild(message);
-      chat.scrollTop = chat.scrollHeight;
+      message.scrollIntoView({ block: "end", behavior: "smooth" });
       if (window.MathJax) {
         MathJax.typesetPromise([message]);
       }
+      if (shouldSave) {
+        chatHistory.push({
+          role: type === "bot" ? "assistant" : "user",
+          content
+        });
+        saveHistory();
+      }
     }
 
-    async function addTypedBotMessage(content) {
+    async function addTypedBotMessage(content, shouldSave = false) {
       const message = document.createElement("div");
       message.className = "message bot typing";
       chat.appendChild(message);
@@ -488,13 +548,30 @@
       if (window.MathJax) {
         MathJax.typesetPromise([message]);
       }
+      if (shouldSave) {
+        chatHistory.push({ role: "assistant", content: text });
+        saveHistory();
+      }
+    }
+
+    function renderSavedHistory() {
+      chat.innerHTML = "";
+      if (chatHistory.length === 0) {
+        addMessage(welcomeMessage, "bot");
+        return;
+      }
+
+      chatHistory.forEach((item) => {
+        addMessage(item.content, item.role === "assistant" ? "bot" : "user");
+      });
     }
 
     async function ask() {
       const question = input.value.trim();
       if (!question) return;
 
-      addMessage(question, "user");
+      const context = historyForRequest();
+      addMessage(question, "user", true);
       input.value = "";
       input.focus();
       loading.textContent = "Ассистент анализирует задачу...";
@@ -505,7 +582,7 @@
         const response = await fetch("/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question })
+          body: JSON.stringify({ question, history: context })
         });
         const data = await response.json();
         const elapsed = Date.now() - startedAt;
@@ -513,9 +590,9 @@
           await wait(minimumThinkingTime - elapsed);
         }
         loading.textContent = "Ассистент печатает ответ...";
-        await addTypedBotMessage(data.answer || "Ответ не получен.");
+        await addTypedBotMessage(data.answer || "Ответ не получен.", true);
       } catch (error) {
-        await addTypedBotMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.");
+        await addTypedBotMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.", true);
       } finally {
         loading.textContent = "";
         sendButton.disabled = false;
@@ -535,6 +612,15 @@
         input.focus();
       });
     });
+
+    clearHistoryButton.addEventListener("click", () => {
+      chatHistory = [];
+      saveHistory();
+      renderSavedHistory();
+      input.focus();
+    });
+
+    renderSavedHistory();
   </script>
 </body>
 </html>

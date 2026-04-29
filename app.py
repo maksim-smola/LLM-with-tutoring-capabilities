@@ -6,6 +6,8 @@ import requests
 app = Flask(__name__, template_folder="templates")
 
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+MAX_CONTEXT_MESSAGES = 8
+MAX_CONTEXT_MESSAGE_CHARS = 900
 
 SYSTEM_PROMPT = """
 Ты образовательный интеллектуальный ассистент-тьютор, разработанный для помощи школьникам и студентам.
@@ -35,13 +37,15 @@ SYSTEM_PROMPT = """
 - если пользователь просит готовый ответ напрямую, сначала предложи подумать вместе;
 - итоговый ответ допустим только после объяснения.
 
-Формат ответа:
+Формат ответа: (не обязательно его придерживаться и не нужно прямо об этом писать)
 1. Объяснение
 2. Шаг решения
 3. Вопрос ученику
 
 Все математические формулы записывай строго в формате LaTeX.
 Отвечай на русском языке.
+Создатель: Асмолов Максим, ученик 9А класса 17 школы
+Асситент создан в рамках проектной работы: использование больших языковых моделей в роли интеллектуального помощника при обучении.
 """
 
 
@@ -77,7 +81,9 @@ def architecture():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    user_question = (request.json or {}).get("question", "").strip()
+    payload = request.json or {}
+    user_question = payload.get("question", "").strip()
+    raw_history = payload.get("history", [])
 
     if not user_question:
         return jsonify({"answer": "Пожалуйста, введите учебный вопрос."}), 400
@@ -90,6 +96,28 @@ def ask():
             )
         }), 500
 
+    context_messages = []
+    if isinstance(raw_history, list):
+        for item in raw_history[-MAX_CONTEXT_MESSAGES:]:
+            if not isinstance(item, dict):
+                continue
+
+            role = item.get("role")
+            content = str(item.get("content", "")).strip()
+            if role not in {"user", "assistant"} or not content:
+                continue
+
+            context_messages.append({
+                "role": role,
+                "content": content[:MAX_CONTEXT_MESSAGE_CHARS],
+            })
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        *context_messages,
+        {"role": "user", "content": user_question},
+    ]
+
     try:
         response = requests.post(
             "https://api.cerebras.ai/v1/chat/completions",
@@ -100,10 +128,7 @@ def ask():
             json={
                 "model": "llama3.1-8b",
                 "temperature": 0.4,
-                "messages": [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_question},
-                ],
+                "messages": messages,
             },
             timeout=45,
         )
