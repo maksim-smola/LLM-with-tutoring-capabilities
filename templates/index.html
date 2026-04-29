@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Учебный AI-ассистент</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
 
     :root {
       --ink: #142033;
@@ -32,7 +32,7 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      font-family: Manrope, Inter, "Segoe UI", system-ui, sans-serif;
+      font-family: Nunito, Inter, "Segoe UI", system-ui, sans-serif;
       background:
         radial-gradient(circle at 12% 14%, rgba(49, 87, 255, 0.18), transparent 28%),
         radial-gradient(circle at 86% 8%, rgba(15, 143, 131, 0.18), transparent 24%),
@@ -154,6 +154,7 @@
       font-size: clamp(34px, 6vw, 64px);
       line-height: 1.03;
       letter-spacing: 0;
+      animation: titleReveal 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     }
 
     h2 {
@@ -198,10 +199,16 @@
       font-size: 15px;
       font-weight: 800;
       cursor: pointer;
+      transition:
+        transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1),
+        box-shadow 0.32s ease,
+        background 0.32s ease,
+        border-color 0.32s ease;
     }
 
     .button:hover {
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: 0 18px 42px rgba(49, 87, 255, 0.26);
     }
 
     .button.secondary {
@@ -209,6 +216,12 @@
       background: #fff;
       border-color: var(--line);
       box-shadow: none;
+    }
+
+    .button.secondary:hover {
+      border-color: #bcccec;
+      background: #f8fbff;
+      box-shadow: 0 12px 30px rgba(31, 41, 86, 0.08);
     }
 
     .visual-panel {
@@ -338,6 +351,19 @@
     @keyframes liftIn {
       from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes titleReveal {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
     }
 
     @media (max-width: 960px) {

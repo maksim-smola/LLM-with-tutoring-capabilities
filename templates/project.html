@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Проект - учебный AI-ассистент</title>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
 
     :root {
       --ink: #142033;
@@ -25,7 +25,7 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      font-family: Manrope, Inter, "Segoe UI", system-ui, sans-serif;
+      font-family: Nunito, Inter, "Segoe UI", system-ui, sans-serif;
       background:
         radial-gradient(circle at 12% 14%, rgba(49, 87, 255, 0.2), transparent 28%),
         radial-gradient(circle at 86% 8%, rgba(15, 143, 131, 0.17), transparent 24%),
@@ -113,6 +113,7 @@
       font-size: clamp(34px, 6vw, 62px);
       line-height: 1.05;
       letter-spacing: 0;
+      animation: titleReveal 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     }
 
     p {
@@ -139,6 +140,14 @@
       background: linear-gradient(135deg, var(--blue), var(--violet));
       box-shadow: 0 14px 34px rgba(49, 87, 255, 0.2);
       font-weight: 800;
+      transition:
+        transform 0.32s cubic-bezier(0.2, 0.7, 0.2, 1),
+        box-shadow 0.32s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 42px rgba(49, 87, 255, 0.26);
     }
 
     .panel {
@@ -177,6 +186,19 @@
     @keyframes liftIn {
       from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes titleReveal {
+      from {
+        opacity: 0;
+        transform: translateY(18px);
+        filter: blur(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
     }
 
     @media (max-width: 820px) {
