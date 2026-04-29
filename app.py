@@ -87,8 +87,59 @@ def wiki_image_search(query):
     title = data.get("title", "Wikipedia")
     if not source:
         return None
+def commons_image_search(query):
+    try:
+        url = "https://commons.wikimedia.org/w/api.php"
+
+        params = {
+            "action": "query",
+            "generator": "search",
+            "gsrsearch": query,
+            "gsrlimit": 1,
+            "prop": "imageinfo",
+            "iiprop": "url",
+            "format": "json"
+        }
+
+        r = requests.get(url, params=params, timeout=3)
+        data = r.json()
+
+        pages = data.get("query", {}).get("pages", {})
+
+        for page in pages.values():
+            info = page.get("imageinfo", [])
+            if info:
+                return {
+                    "src": info[0]["url"],
+                    "alt": page.get("title", "Wikimedia Commons")
+                }
+
+    except Exception:
+        pass
+
+    return None
 
     return {"src": source, "alt": title}
+if not wiki_image:
+    wiki_image = commons_image_search(user_question)
+
+def ddg_search(query):
+    try:
+        url = "https://api.duckduckgo.com/"
+
+        params = {
+            "q": query,
+            "format": "json",
+            "no_html": 1
+        }
+
+        r = requests.get(url, params=params, timeout=3)
+        data = r.json()
+
+        return data.get("AbstractText", "")
+
+    except Exception:
+        return ""
 
 
 @app.route("/")
@@ -160,6 +211,10 @@ def ask():
     if use_internet:
         wiki_context = wiki_search(user_question).strip()
         wiki_image = wiki_image_search(user_question)
+        if not wiki_context:
+            wiki_context = ddg_search(user_question)
+        if not wiki_image:
+        wiki_image = commons_image_search(user_question)
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},

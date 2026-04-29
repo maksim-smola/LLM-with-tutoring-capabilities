@@ -522,7 +522,7 @@
       </div>
       <div class="chat-options">
         <label class="internet-toggle">
-          <input id="use_internet" type="checkbox">
+          <input id="use_internet" type="checkbox" checked>
           Искать справку в Wikipedia
         </label>
       </div>
@@ -687,8 +687,8 @@
           await wait(minimumThinkingTime - elapsed);
         }
         loading.textContent = "Ассистент печатает ответ...";
+        addWikiImage(data.wiki_image, true)
         await addTypedBotMessage(data.answer || "Ответ не получен.", true);
-        addWikiImage(data.wiki_image, true);
       } catch (error) {
         await addTypedBotMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.", true);
       } finally {
