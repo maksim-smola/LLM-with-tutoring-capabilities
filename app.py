@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, render_template, request, send_from_directory
 import os
 import requests
+from urllib.parse import quote
 
 
 app = Flask(__name__, template_folder="templates")
@@ -8,6 +9,7 @@ app = Flask(__name__, template_folder="templates")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
 MAX_CONTEXT_MESSAGES = 8
 MAX_CONTEXT_MESSAGE_CHARS = 900
+WIKI_API_URL = "https://ru.wikipedia.org/api/rest_v1/page/summary"
 
 SYSTEM_PROMPT = """
 Ты образовательный интеллектуальный ассистент-тьютор, разработанный для помощи школьникам и студентам.
@@ -49,6 +51,46 @@ SYSTEM_PROMPT = """
 """
 
 
+SYSTEM_PROMPT += """
+
+Если в запросе есть Wikipedia-контекст, используй его как справочный материал и не выдумывай факты вне этого контекста. Изображения из Wikipedia не описывай как часть основного текста: сайт выводит их отдельным полем после ответа.
+"""
+
+
+def wiki_summary(query):
+    safe_query = quote(query.strip().replace("/", " "))
+    if not safe_query:
+        return {}
+
+    try:
+        response = requests.get(
+            f"{WIKI_API_URL}/{safe_query}",
+            headers={"User-Agent": "EducationalAIAssistant/1.0"},
+            timeout=3,
+        )
+        response.raise_for_status()
+        return response.json()
+    except (requests.RequestException, ValueError):
+        return {}
+
+
+def wiki_search(query):
+    data = wiki_summary(query)
+    extract = data.get("extract", "")
+    return extract if isinstance(extract, str) else ""
+
+
+def wiki_image_search(query):
+    data = wiki_summary(query)
+    image = data.get("thumbnail") or data.get("originalimage") or {}
+    source = image.get("source", "")
+    title = data.get("title", "Wikipedia")
+    if not source:
+        return None
+
+    return {"src": source, "alt": title}
+
+
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -84,6 +126,7 @@ def ask():
     payload = request.json or {}
     user_question = payload.get("question", "").strip()
     raw_history = payload.get("history", [])
+    use_internet = payload.get("use_internet") is True
 
     if not user_question:
         return jsonify({"answer": "Пожалуйста, введите учебный вопрос."}), 400
@@ -112,11 +155,24 @@ def ask():
                 "content": content[:MAX_CONTEXT_MESSAGE_CHARS],
             })
 
+    wiki_context = ""
+    wiki_image = None
+    if use_internet:
+        wiki_context = wiki_search(user_question).strip()
+        wiki_image = wiki_image_search(user_question)
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         *context_messages,
-        {"role": "user", "content": user_question},
     ]
+
+    if wiki_context:
+        messages.append({
+            "role": "system",
+            "content": f"Wikipedia context for the next user question:\n{wiki_context}",
+        })
+
+    messages.append({"role": "user", "content": user_question})
 
     try:
         response = requests.post(
@@ -142,7 +198,10 @@ def ask():
         return jsonify({"answer": f"Ошибка Cerebras API: {data}"}), 502
 
     answer = data["choices"][0]["message"]["content"]
-    return jsonify({"answer": answer})
+    if wiki_context:
+        answer = f"{answer}\n\nИсточник: Wikipedia"
+
+    return jsonify({"answer": answer, "wiki_image": wiki_image})
 
 
 if __name__ == "__main__":

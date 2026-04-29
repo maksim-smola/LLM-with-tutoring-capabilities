@@ -217,9 +217,34 @@
       background: #fff1e3;
     }
 
+    .chat-options {
+      padding: 12px 14px 0;
+      border-top: 1px solid var(--line);
+      background: #fffaf5;
+    }
+
+    .internet-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: #6f4935;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .internet-toggle input {
+      width: 18px;
+      height: 18px;
+      min-height: auto;
+      padding: 0;
+      accent-color: var(--caramel);
+      cursor: pointer;
+    }
+
     .chat-panel {
       display: grid;
-      grid-template-rows: minmax(420px, 1fr) auto auto;
+      grid-template-rows: minmax(420px, 1fr) auto auto auto;
       min-width: 0;
       overflow: hidden;
     }
@@ -271,6 +296,32 @@
 
     .message p:last-child {
       margin-bottom: 0;
+    }
+
+    .wiki-image-card {
+      width: fit-content;
+      max-width: min(420px, 86%);
+      margin: -4px 0 14px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff8ef;
+    }
+
+    .wiki-image-card img {
+      display: block;
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .wiki-image-card span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
     }
 
     .input-panel {
@@ -413,6 +464,11 @@
         padding: 12px 13px;
       }
 
+      .wiki-image-card {
+        width: 100%;
+        max-width: 100%;
+      }
+
       .message.user {
         margin-left: 0;
       }
@@ -464,6 +520,12 @@
           Здравствуйте! Напишите учебный вопрос, и я помогу разобрать его шаг за шагом.
         </div>
       </div>
+      <div class="chat-options">
+        <label class="internet-toggle">
+          <input id="use_internet" type="checkbox">
+          Искать справку в Wikipedia
+        </label>
+      </div>
       <div class="input-panel">
         <input id="question" placeholder="Введите учебный вопрос..." autocomplete="off">
         <button class="button" id="sendButton" type="button">Отправить</button>
@@ -478,6 +540,7 @@
     const loading = document.getElementById("loading");
     const sendButton = document.getElementById("sendButton");
     const clearHistoryButton = document.getElementById("clearHistory");
+    const useInternet = document.getElementById("use_internet");
     const minimumThinkingTime = 850;
     const storageKey = "studyAssistantChatHistory";
     const welcomeMessage = "Здравствуйте! Напишите учебный вопрос, и я помогу разобрать его шаг за шагом.";
@@ -503,6 +566,7 @@
     function historyForRequest() {
       return chatHistory
         .slice(-8)
+        .filter((item) => item.role === "user" || item.role === "assistant")
         .map((item) => ({
           role: item.role,
           content: item.content.slice(0, 900)
@@ -554,6 +618,31 @@
       }
     }
 
+    function addWikiImage(image, shouldSave = false) {
+      if (!image || !image.src) return;
+
+      const card = document.createElement("div");
+      card.className = "wiki-image-card";
+
+      const img = document.createElement("img");
+      img.src = image.src;
+      img.alt = image.alt || "Wikipedia";
+      img.loading = "lazy";
+
+      const caption = document.createElement("span");
+      caption.textContent = image.alt ? `Изображение: ${image.alt}` : "Изображение: Wikipedia";
+
+      card.appendChild(img);
+      card.appendChild(caption);
+      chat.appendChild(card);
+      card.scrollIntoView({ block: "end", behavior: "smooth" });
+
+      if (shouldSave) {
+        chatHistory.push({ role: "image", src: image.src, alt: image.alt || "Wikipedia" });
+        saveHistory();
+      }
+    }
+
     function renderSavedHistory() {
       chat.innerHTML = "";
       if (chatHistory.length === 0) {
@@ -562,7 +651,11 @@
       }
 
       chatHistory.forEach((item) => {
-        addMessage(item.content, item.role === "assistant" ? "bot" : "user");
+        if (item.role === "image") {
+          addWikiImage(item);
+        } else {
+          addMessage(item.content, item.role === "assistant" ? "bot" : "user");
+        }
       });
     }
 
@@ -582,7 +675,11 @@
         const response = await fetch("/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question, history: context })
+          body: JSON.stringify({
+            question,
+            history: context,
+            use_internet: useInternet.checked
+          })
         });
         const data = await response.json();
         const elapsed = Date.now() - startedAt;
@@ -591,6 +688,7 @@
         }
         loading.textContent = "Ассистент печатает ответ...";
         await addTypedBotMessage(data.answer || "Ответ не получен.", true);
+        addWikiImage(data.wiki_image, true);
       } catch (error) {
         await addTypedBotMessage("Не удалось связаться с сервером. Проверьте запуск приложения и попробуйте снова.", true);
       } finally {
