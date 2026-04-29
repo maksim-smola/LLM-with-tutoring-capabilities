@@ -83,19 +83,17 @@ def wiki_search(query):
 def wiki_image_search(query):
     data = wiki_summary(query)
     image = data.get("thumbnail") or data.get("originalimage") or {}
+
     source = image.get("source", "")
     title = data.get("title", "Wikipedia")
 
-    def wiki_image_search(query):
-        data = wiki_summary(query)
-        image = data.get("thumbnail") or data.get("originalimage") or {}
-        source = image.get("source", "")
-        title = data.get("title", "Wikipedia")
+    if not source:
+        return None
 
-        if not source:
-            return None
-
-        return {"src": source, "alt": title}
+    return {
+        "src": source,
+        "alt": title
+    }
 def commons_image_search(query):
     try:
         url = "https://commons.wikimedia.org/w/api.php"
@@ -260,8 +258,8 @@ def ask():
         return jsonify({"answer": f"Ошибка Cerebras API: {data}"}), 502
 
     answer = data["choices"][0]["message"]["content"]
-    if wiki_context:
-        answer = f"{answer}\n\nИсточник: Wikipedia"
+    if wiki_context and "Источник:" not in answer:
+        answer += "\n\nИсточник: Wikipedia"
 
     return jsonify({"answer": answer, "wiki_image": wiki_image})
 
