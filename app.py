@@ -162,7 +162,7 @@ def project():
 
 @app.route("/download/project")
 def download_project():
-    return send_from_directory("static/downloads", "Приказ №27С.docx", as_attachment=True)
+    return send_from_directory("static/downloads", "Проект Ассистент по обучению.docx", as_attachment=True)
 
 
 @app.route("/about")
